@@ -1,6 +1,9 @@
 import torch
 import numpy as np
 
+'''Atomic class implementing a fully connected architecture.
+Currently this has two hidden layers, with selective activations
+'''
 class Feedforward(torch.nn.Module):
     def __init__(self, input_size, hidden_size, output_size, rectification='ReLU', output_act=False):
         super(Feedforward, self).__init__()
@@ -23,6 +26,20 @@ class Feedforward(torch.nn.Module):
 
         return output
 
+'''Implements a permutation invariant module
+Consists of three subnetworks:
+f_psi : handles the input
+f_omega: computes per-feature scaling weights
+f_phi : computes the perm invariant summary statistic
+
+Can operate in two different ways:
+If is_batched is set to True, then the network expects inputs
+of the form N_BATCH X N_SAMPLES X N_FEATURES. This is then converted 
+to a statistic of dimension N_BATCH X N_SUMMARY_DIMENSION
+
+If is_batched is set to False, then the network expects inputs 
+of the form N_SAMPLES x N_FEATURES --> [N_SUMMARY_DIMENSION]
+'''
 class PermInvariantNetwork(torch.nn.Module):
     def __init__(self, n_features_in, n_hidden_psi, n_output_psi, n_hidden_phi, n_features_out, is_batched=True):
         super(PermInvariantNetwork, self).__init__()
@@ -51,6 +68,8 @@ class PermInvariantNetwork(torch.nn.Module):
         y = self.ffun(x)
         return y
 
+'''A naive affine coupling block that operates without any conditioning vector
+'''
 class ACBFlow(torch.nn.Module):
     def __init__(self, data_dim):
         super(ACBFlow, self).__init__()
@@ -92,6 +111,8 @@ class ACBFlow(torch.nn.Module):
         U = torch.cat([u_1, u_2], axis=-1)
         return U
 
+'''An affine coupling block that operates with conditioning
+'''
 class AffineCouplingBlock(torch.nn.Module):
     def __init__(self, data_dim, summary_dim):
         super(AffineCouplingBlock, self).__init__()
@@ -138,6 +159,9 @@ class AffineCouplingBlock(torch.nn.Module):
         
         return U
 
+'''Invertible neural network class: basically chains the INN modules and specifies
+both a forward and reverse pass
+'''
 class INN(torch.nn.Module):
     def __init__(self, n_blocks, data_dim, batch_size):
         super(INN, self).__init__()
@@ -168,6 +192,8 @@ class INN(torch.nn.Module):
         loss = torch.mean(0.5*(torch.norm(pred, dim=1)**2) - self.log_dets)
         return loss
 
+'''conditional Invertible neural network class
+'''
 class cINN(torch.nn.Module):
     def __init__(self, net_params, n_blocks, data_dim, summary_dim, batch_size):
         super(cINN, self).__init__()
