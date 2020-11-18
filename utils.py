@@ -155,7 +155,7 @@ class AffineCouplingBlock(torch.nn.Module):
         v_2 = V[1][..., D:]
         u_2 = torch.mul(v_2 - self.t2(torch.cat([V[0], v_1], axis=1)), torch.exp(-self.s2(torch.cat([V[0], v_1], axis=1))))
         u_1 = torch.mul(v_1 - self.t1(torch.cat([V[0], u_2], axis=1)), torch.exp(-self.s1(torch.cat([V[0], u_2], axis=1))))
-        U = torch.cat([u_2, u_1], axis=-1)
+        U = torch.cat([u_1, u_2], axis=-1)
         
         return U
 
@@ -228,5 +228,3 @@ class cINN(torch.nn.Module):
         #loss = torch.mean((torch.norm(pred)**2)/2. - torch.sum(self.log_dets))
 
         return loss
-
-
